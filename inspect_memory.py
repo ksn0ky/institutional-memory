@@ -18,7 +18,8 @@ from anthropic import Anthropic
 
 
 def main() -> None:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    key = os.environ.get("ANTHROPIC_API_KEY")
+    if not key:
         raise SystemExit("Set ANTHROPIC_API_KEY before running.")
 
     store_id_path = Path(".memory_store_id")
@@ -28,7 +29,7 @@ def main() -> None:
 
     full = "--full" in sys.argv
 
-    client = Anthropic()
+    client = Anthropic(api_key=key)
 
     print(f"Memory store: {store_id}\n" + "=" * 60)
 

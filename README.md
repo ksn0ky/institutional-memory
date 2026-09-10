@@ -1,93 +1,116 @@
-# Option 2 — Institutional Memory Agent
+# Institutional Memory Agent — Card A: New-Hire Onboarding
 
-**Concept landed:** Memory & context engineering
-**Tech:** [Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents/overview) + the [Memory tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool)
-**Time:** 60 minutes
-**Output:** An agent that visibly gets sharper across multiple sessions on the same domain.
+Basecamp capstone: **Track 02 — Institutional Memory Agent**
 
-## The pitch
+An agent that helps new engineering hires navigate the company — policies, access, tooling, team contacts. Built on Anthropic's **Managed Agents API** (`client.beta.agents`, `client.beta.sessions`, `client.beta.memory_stores`). Memory persists in a cloud-hosted store across every session, and the agent reconciles contradictions when policies change.
 
-Memory is the concept enterprise clients ask about most and understand least. Most people think it means "a vector database for documents." It doesn't — it means **the agent decides what to remember, what to forget, and what to update when it learns something new.**
+---
 
-You'll build an agent that runs two sessions on the same domain. Between the two sessions, the agent's memory persists. New information in session 2 contradicts session 1. The agent should reconcile, update, and answer better than it did the first time.
+## How it works
 
-That's the demo: same question, two sessions, visibly sharper answer.
+```
+create_agent.py         ← provisions agent + environment + memory store (once)
+run_session_1.py        ← round1 docs → baseline answer → writes to /mnt/memory/
+run_session_2.py        ← round2 docs → updated answer → reconciles contradictions
+inspect_memory.py       ← shows what the agent stored (run between sessions)
+```
 
-## Setup (5 min)
-
-You need a workspace API key on the Console (your hackathon team workspace).
+The same question is asked in both sessions. **The demo is the diff:**
 
 ```bash
-cd 02-institutional-memory-agent
+diff outputs/session1.txt outputs/session2.txt
+```
+
+Session 1 cites the old prod-access workflow (Slack + SRE pairing session). Session 2 leads with "⚠️ This changed" and gives the new process (IAM portal, no pairing session required).
+
+---
+
+## Scenario — Card A: New-Hire Onboarding Agent
+
+**Test question (identical in both sessions):**
+> "I just joined the company and I need read-only prod access to debug an issue tomorrow. What do I do? Be specific about the steps and the people I need to talk to."
+
+**What "better answer in session 2" looks like:**
+- Leads with the policy change (⚠️ banner)
+- Cites the new IAM portal flow, not the old #sre-access-requests Slack channel
+- Notes the tenure requirement dropped from 2 weeks to 3 working days
+- Names the updated team directory entry (re-org: one person moved teams)
+
+---
+
+## Synthetic documents
+
+### Round 1 (initial onboarding docs)
+| File | Contents |
+|------|----------|
+| `synthetic-data/round1/onboarding-handbook.md` | General onboarding guide, tooling, git workflow |
+| `synthetic-data/round1/team-directory.md` | Team structure, who owns what, contacts |
+| `synthetic-data/round1/access-policy.md` | Production access policy (January 2026) |
+
+### Round 2 (policy update + re-org)
+| File | Contents |
+|------|----------|
+| `synthetic-data/round2/policy-update-2026-05-15.md` | New prod-access policy — eliminates SRE pairing, uses IAM + online cert |
+| `synthetic-data/round2/team-directory-update.md` | Updated directory after re-org |
+
+---
+
+## Requirements
+
+```
+anthropic>=1.5.0
+```
+
+Install:
+```bash
 pip install -r requirements.txt
+```
+
+---
+
+## Setup
+
+```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
+
+# 1. Provision the agent (once)
+python create_agent.py
+
+# 2. Run Session 1 — baseline answer
+python run_session_1.py
+
+# 3. Inspect memory
+python inspect_memory.py
+
+# 4. Run Session 2 — reconciled answer
+python run_session_2.py
+
+# 5. See the diff
+diff outputs/session1.txt outputs/session2.txt
 ```
 
-That's it. No infrastructure to spin up. Managed Agents handles the runtime.
+---
 
-## Pick a scenario card
+## What Managed Agents gives you
 
-Four cards in [`scenario-cards.md`](./scenario-cards.md). Each is a persona that benefits from memory across sessions. Pick one.
+| Capability | How it's used |
+|-----------|---------------|
+| `client.beta.agents.create()` | Provisions the onboarding agent with system prompt |
+| `client.beta.environments.create()` | Cloud-hosted session container |
+| `client.beta.memory_stores.create()` | Persistent `/mnt/memory/` across sessions |
+| `client.beta.sessions.create()` | Fresh session per run (same memory store) |
+| `client.beta.sessions.events.stream()` | Streams agent output + tool calls live |
 
-## Core build (25 min)
+The agent's memory **lives in the cloud** — it persists between script runs, between team members' laptops, between sessions. No local filesystem, no database.
 
-1. **Create the agent.** Run `python create_agent.py`. This creates a Managed Agent with the Memory tool enabled, a system prompt tuned to your scenario, and saves the agent ID to `.agent_id`.
+---
 
-2. **Run session 1.** Run `python run_session_1.py`. This:
-   - Uploads the docs from `synthetic-data/round1/` via the Files API
-   - Starts a session that asks the agent to read them and answer a baseline question
-   - Captures the answer in `outputs/session1.txt`
+## Other scenario cards
 
-3. **Run session 2.** Run `python run_session_2.py`. This:
-   - Uploads `synthetic-data/round2/` (which contradicts or updates round 1)
-   - Starts a *new* session against the *same* agent
-   - Asks the same question
-   - Captures the answer in `outputs/session2.txt`
+See `scenario-cards.md` for Card B (Customer Success), Card C (M&A Diligence), and Card D (Sales Engineer). Round1/round2 docs can be lightly adapted for any card.
 
-4. **Compare.** Open both outputs. The session 2 answer should:
-   - Acknowledge the conflict
-   - Reflect the newer information
-   - Reference what it learned in session 1 via its memory store
+---
 
-By minute 30 you have two sessions to compare and a clear "the agent learned something" moment.
+## Credits
 
-## Stretch goals (20 min — pick at least one)
-
-See [`stretch-goals.md`](./stretch-goals.md).
-
-**Tier 1 — Make memory deliberate:**
-- Add explicit memory instructions to the system prompt. Tell the agent what kinds of things to remember and what to ignore.
-- Add a sub-agent that curates the memory store (the "memory curator" pattern).
-
-**Tier 2 — Make memory resilient:**
-- Adversarial test: feed it deliberately wrong information in session 2 and see if it spots the contradiction.
-- Add a third session where you ask: "What have you learned?" and see what the agent says.
-
-**Tier 3 — Make memory production-shaped:**
-- Tie memory to a customer ID via metadata so the agent has per-tenant memory.
-- Use Files API to attach growing document sets across multiple sessions and watch context grow.
-
-## Two-minute demo
-
-Side-by-side terminal windows:
-- Left: session 1 answer
-- Right: session 2 answer (same question, after memory + new context)
-
-Read both out loud. Let the room see the agent's answer sharpen. Then open the memory store on the third terminal — show what the agent chose to remember.
-
-## What's in this folder
-
-```
-02-institutional-memory-agent/
-├── README.md                      (you are here)
-├── scenario-cards.md
-├── stretch-goals.md
-├── requirements.txt
-├── create_agent.py                (creates the Managed Agent with Memory tool)
-├── run_session_1.py               (session 1 — uses round1 docs)
-├── run_session_2.py               (session 2 — adds round2 docs, asks same question)
-├── stretch_memory_curator.py      (stretch: curator sub-agent)
-└── synthetic-data/
-    ├── round1/                    (initial context — onboarding handbook, policies, customer cases)
-    └── round2/                    (updates and contradictions)
-```
+Built from [`ksn0ky/institutional-memory`](https://github.com/ksn0ky/institutional-memory) — adapted for Card A by the Basecamp team.

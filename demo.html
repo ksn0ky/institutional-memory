@@ -1,0 +1,845 @@
+<title>The Onboarding Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+  :root {
+    --bg: #1C1C1C;
+    --surface: #272727;
+    --surface-2: #313131;
+    --gold: #E8C547;
+    --gold-dim: #a88d30;
+    --red: #E85454;
+    --green: #54C47A;
+    --text: #F0EDE8;
+    --muted: #8A8580;
+    --border: #3A3A3A;
+    --mono-bg: #111111;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #F2EFE8;
+      --surface: #E8E5DE;
+      --surface-2: #DDDAD3;
+      --gold: #B8962A;
+      --gold-dim: #896e1d;
+      --red: #C93A3A;
+      --green: #2D8F56;
+      --text: #1A1815;
+      --muted: #6A6762;
+      --border: #C8C5BE;
+      --mono-bg: #1A1A1A;
+    }
+  }
+
+  :root[data-theme="light"] {
+    --bg: #F2EFE8;
+    --surface: #E8E5DE;
+    --surface-2: #DDDAD3;
+    --gold: #B8962A;
+    --gold-dim: #896e1d;
+    --red: #C93A3A;
+    --green: #2D8F56;
+    --text: #1A1815;
+    --muted: #6A6762;
+    --border: #C8C5BE;
+    --mono-bg: #1A1A1A;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 39px,
+      var(--border) 39px,
+      var(--border) 40px
+    );
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .75rem;
+    letter-spacing: .2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp .6s .2s ease forwards;
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3.5rem, 12vw, 9rem);
+    line-height: .92;
+    letter-spacing: .02em;
+    text-wrap: balance;
+    opacity: 0;
+    animation: fadeUp .7s .4s ease forwards;
+  }
+
+  .hero-title em {
+    font-style: normal;
+    color: var(--gold);
+    display: block;
+  }
+
+  .hero-sub {
+    max-width: 520px;
+    margin: 1.8rem auto 0;
+    font-size: 1.05rem;
+    color: var(--muted);
+    opacity: 0;
+    animation: fadeUp .6s .7s ease forwards;
+  }
+
+  .hero-badge {
+    margin-top: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: .45rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .78rem;
+    color: var(--muted);
+    opacity: 0;
+    animation: fadeUp .5s 1s ease forwards;
+  }
+
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; animation: pulse 2s ease-in-out infinite; }
+
+  /* ── PANELS ── */
+  .panel {
+    padding: 5rem 2rem;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .panel-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .7rem;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: .6rem;
+  }
+
+  .panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.2rem, 6vw, 4.5rem);
+    line-height: .95;
+    letter-spacing: .02em;
+    text-wrap: balance;
+    margin-bottom: 1.4rem;
+  }
+
+  /* ── DIVIDER RULE ── */
+  .rule {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0;
+  }
+
+  /* ── STORY CARDS ── */
+  .story-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 2rem;
+  }
+
+  .story-card {
+    background: var(--surface);
+    padding: 1.6rem 1.4rem;
+  }
+
+  .story-card .day {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    line-height: 1;
+    color: var(--gold);
+    display: block;
+    margin-bottom: .3rem;
+  }
+
+  .story-card .card-title {
+    font-weight: 700;
+    font-size: .95rem;
+    margin-bottom: .5rem;
+    color: var(--text);
+  }
+
+  .story-card p { font-size: .88rem; color: var(--muted); }
+
+  .story-card .verdict {
+    margin-top: 1rem;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: .08em;
+  }
+  .verdict.denied { color: var(--red); }
+  .verdict.waiting { color: var(--gold-dim); }
+
+  /* ── BROKEN FLOW ── */
+  .flow {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+  }
+
+  .flow-step {
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    transition: background .2s;
+  }
+  .flow-step:last-child { border-bottom: none; }
+
+  .flow-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1;
+  }
+
+  .flow-text { font-size: .9rem; }
+  .flow-text strong { color: var(--text); display: block; margin-bottom: .1rem; }
+  .flow-text span { color: var(--muted); font-size: .82rem; }
+
+  .flow-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .72rem;
+    padding: .25rem .55rem;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .status-ok { background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green); }
+  .status-bad { background: color-mix(in srgb, var(--red) 15%, transparent); color: var(--red); }
+  .status-warn { background: color-mix(in srgb, var(--gold) 15%, transparent); color: var(--gold); }
+
+  /* ── DEPRECATED STAMP ── */
+  .stamp-container {
+    position: relative;
+    display: inline-block;
+    margin-top: 2rem;
+    width: 100%;
+  }
+
+  .policy-card {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 1.5rem;
+    font-size: .88rem;
+    line-height: 1.7;
+    color: var(--muted);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .policy-card h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .72rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: .8rem;
+  }
+
+  .policy-card ol { padding-left: 1.2rem; }
+  .policy-card li { margin-bottom: .4rem; }
+  .policy-card li strong { color: var(--text); }
+
+  .stamp {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-22deg) scale(0);
+    border: 5px solid var(--red);
+    padding: .5rem 1.4rem;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem;
+    color: var(--red);
+    letter-spacing: .18em;
+    opacity: 0;
+    white-space: nowrap;
+    pointer-events: none;
+    transform-origin: center;
+  }
+
+  .stamp.animate {
+    animation: stamp .55s cubic-bezier(.15,.85,.3,1.2) forwards;
+  }
+
+  /* ── TERMINAL ── */
+  .terminal {
+    background: var(--mono-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 2rem;
+  }
+
+  .terminal-bar {
+    background: var(--surface-2);
+    padding: .5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tb-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .tb-dot:nth-child(1) { background: var(--red); }
+  .tb-dot:nth-child(2) { background: var(--gold); }
+  .tb-dot:nth-child(3) { background: var(--green); }
+  .tb-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .72rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  .terminal-body {
+    padding: 1.2rem 1.4rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .82rem;
+    line-height: 1.8;
+    min-height: 180px;
+    color: #C9D1D9;
+  }
+
+  .t-prompt { color: var(--green); }
+  .t-cmd { color: var(--text); }
+  .t-memory { color: var(--gold); }
+  .t-update { color: #79C0FF; }
+  .t-warn { color: var(--red); font-weight: 600; }
+  .t-ok { color: var(--green); }
+  .t-cursor {
+    display: inline-block;
+    width: 9px;
+    height: 1.1em;
+    background: var(--text);
+    vertical-align: text-bottom;
+    animation: blink .8s step-end infinite;
+  }
+
+  /* ── DIFF ── */
+  .diff {
+    border: 1px solid var(--border);
+    background: var(--mono-bg);
+    margin-top: 2rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .8rem;
+    overflow-x: auto;
+  }
+
+  .diff-header {
+    background: var(--surface-2);
+    padding: .6rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: .72rem;
+    letter-spacing: .08em;
+  }
+
+  .diff-line {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    padding: .12rem 1rem;
+    line-height: 1.6;
+  }
+
+  .diff-sign { color: var(--muted); user-select: none; }
+  .diff-line.del { background: color-mix(in srgb, var(--red) 12%, transparent); }
+  .diff-line.del .diff-sign { color: var(--red); }
+  .diff-line.del .diff-content { color: var(--red); opacity: .85; }
+  .diff-line.add { background: color-mix(in srgb, var(--green) 12%, transparent); }
+  .diff-line.add .diff-sign { color: var(--green); }
+  .diff-line.add .diff-content { color: var(--green); }
+  .diff-line.ctx .diff-content { color: var(--muted); }
+
+  /* ── STATS ── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 2rem;
+  }
+
+  .stat {
+    background: var(--surface);
+    padding: 1.4rem 1.2rem;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    line-height: 1;
+    display: block;
+    margin-bottom: .25rem;
+  }
+
+  .stat-label {
+    font-size: .78rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+
+  /* ── QUOTE ── */
+  .quote-block {
+    border-left: 3px solid var(--gold);
+    padding: 1.2rem 1.5rem;
+    background: var(--surface);
+    margin-top: 2rem;
+    font-style: italic;
+    color: var(--muted);
+    position: relative;
+  }
+
+  .quote-block::before {
+    content: '"';
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 5rem;
+    line-height: .6;
+    color: var(--gold);
+    opacity: .3;
+    position: absolute;
+    top: .8rem;
+    left: .8rem;
+    pointer-events: none;
+  }
+
+  .quote-block p { position: relative; z-index: 1; }
+  .quote-block cite {
+    display: block;
+    margin-top: .6rem;
+    font-style: normal;
+    font-size: .8rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+  }
+
+  /* ── INSTALL ── */
+  .code-block {
+    background: var(--mono-bg);
+    border: 1px solid var(--border);
+    padding: 1.2rem 1.4rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .82rem;
+    line-height: 2;
+    color: #C9D1D9;
+    margin-top: 1.2rem;
+    overflow-x: auto;
+  }
+
+  .code-block .c-comment { color: #6E7681; }
+  .code-block .c-cmd { color: var(--gold); }
+  .code-block .c-arg { color: #79C0FF; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2.5rem 2rem;
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-brand {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+
+  footer a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .76rem;
+    color: var(--gold);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color .15s;
+  }
+  footer a:hover { border-color: var(--gold); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes stamp {
+    0%   { transform: translate(-50%, -60%) rotate(-22deg) scale(2.2); opacity: 0; }
+    60%  { transform: translate(-50%, -50%) rotate(-22deg) scale(.95); opacity: 1; }
+    80%  { transform: translate(-50%, -50%) rotate(-22deg) scale(1.05); opacity: 1; }
+    100% { transform: translate(-50%, -50%) rotate(-22deg) scale(1);    opacity: 1; }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; } 50% { opacity: 0; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .6; transform: scale(.85); }
+  }
+
+  @keyframes countUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  .panel { opacity: 0; transform: translateY(24px); transition: opacity .55s ease, transform .55s ease; }
+  .panel.visible { opacity: 1; transform: translateY(0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow">Basecamp Track 02 · Institutional Memory</p>
+  <h1 class="hero-title">
+    Your company<br>
+    <em>forgets things.</em>
+  </h1>
+  <p class="hero-sub">
+    A new hire asks how to get prod access. The wiki is from 2024.
+    The SRE channel has 47 unanswered requests. The policy changed last Tuesday.
+    Nobody told anyone.
+  </p>
+  <div class="hero-badge">
+    <span class="dot"></span>
+    New-Hire Onboarding Agent · Managed Memory · Card A
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- PANEL 1: THE PAIN -->
+<section class="panel" id="p1">
+  <p class="panel-label">Act I</p>
+  <h2 class="panel-title">Day One.<br>You need prod access.</h2>
+  <p style="color: var(--muted); max-width: 560px;">
+    Every engineer has lived this. You have a bug. You need logs.
+    You ask how to get prod access and receive a 47-step wiki page last updated
+    when the company had 40 people. You now have 280.
+  </p>
+
+  <div class="story-grid">
+    <div class="story-card">
+      <span class="day">9AM</span>
+      <div class="card-title">Post in #sre-access-requests</div>
+      <p>The handbook says to tag your manager AND the SRE on rota. You do this. You feel productive.</p>
+      <div class="verdict waiting">⏳ Waiting...</div>
+    </div>
+    <div class="story-card">
+      <span class="day">2PM</span>
+      <div class="card-title">Pairing session scheduled</div>
+      <p>The SRE responds. They will schedule a 30-minute pairing session. "Typically within 2 working days." Typically.</p>
+      <div class="verdict waiting">📅 3 weeks out</div>
+    </div>
+    <div class="story-card">
+      <span class="day">Day 22</span>
+      <div class="card-title">Pairing session happens</div>
+      <p>Your bug shipped last week. Someone else had prod access and fixed it. Your pairing session is still nice though.</p>
+      <div class="verdict denied">❌ Too late</div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- PANEL 2: THE OLD POLICY -->
+<section class="panel" id="p2">
+  <p class="panel-label">Act II</p>
+  <h2 class="panel-title">The Policy.<br>January 2026.</h2>
+  <p style="color: var(--muted); max-width: 560px;">
+    The wiki had all the answers. The wiki was very confident about this.
+    The wiki had not been told about the April incident review.
+  </p>
+
+  <div class="stamp-container" id="stampContainer">
+    <div class="policy-card" id="policyCard">
+      <h4>access-policy.md · effective January 2026</h4>
+      <ol>
+        <li>Engineer opens a ticket in <strong>#sre-access-requests</strong>.</li>
+        <li>Engineer tags their direct manager AND the SRE on rota for that week.</li>
+        <li>SRE schedules a 30-minute <strong>pairing session</strong> within 2 working days.</li>
+        <li>After pairing, SRE files access via Okta. Provisioning in ~4 hours.</li>
+      </ol>
+      <br>
+      <p style="font-size: .8rem; color: var(--muted);">
+        Tenure requirement: 2 weeks minimum.<br>
+        Policy reviewed quarterly. Last review: 2025-12-15.
+      </p>
+      <div class="stamp" id="stamp">DEPRECATED</div>
+    </div>
+  </div>
+
+  <div class="stat-row" style="margin-top: 1.5rem;">
+    <div class="stat">
+      <span class="stat-num" style="color: var(--red);" data-target="47">0</span>
+      <span class="stat-label">Slack requests backlogged</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" style="color: var(--gold);" data-target="3">0</span>
+      <span class="stat-label">Weeks median wait</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" style="color: var(--muted);" data-target="280">0</span>
+      <span class="stat-label">Engineers. Policy written for 40.</span>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- PANEL 3: THE AGENT -->
+<section class="panel" id="p3">
+  <p class="panel-label">Act III</p>
+  <h2 class="panel-title">Enter:<br>The Agent.</h2>
+  <p style="color: var(--muted); max-width: 580px;">
+    Session 1: the agent reads the old docs, writes key facts to
+    <code style="font-family: 'JetBrains Mono', monospace; font-size: .88em; color: var(--gold);">/mnt/memory/</code>,
+    and answers the question. Session 2: new policy drops.
+    The agent checks memory first, notices the contradiction, updates the file,
+    and leads with the correction.
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <div class="tb-dot"></div><div class="tb-dot"></div><div class="tb-dot"></div>
+      <span class="tb-title">run_session_2.py</span>
+    </div>
+    <div class="terminal-body" id="terminalBody">
+      <span class="t-cursor"></span>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- PANEL 4: THE DIFF -->
+<section class="panel" id="p4">
+  <p class="panel-label">Act IV</p>
+  <h2 class="panel-title">The diff.<br>That's the demo.</h2>
+  <p style="color: var(--muted); max-width: 560px;">
+    Same question. Same agent. Three weeks of policy drama in between.
+    This is what institutional memory looks like when it works.
+  </p>
+
+  <div class="diff">
+    <div class="diff-header">$ diff outputs/session1.txt outputs/session2.txt</div>
+    <div class="diff-line ctx"><span class="diff-sign"> </span><span class="diff-content">QUESTION: I just joined... need read-only prod access tomorrow...</span></div>
+    <div class="diff-line ctx"><span class="diff-sign"> </span><span class="diff-content"></span></div>
+    <div class="diff-line del"><span class="diff-sign">-</span><span class="diff-content">Post in #sre-access-requests on Slack. Tag your manager</span></div>
+    <div class="diff-line del"><span class="diff-sign">-</span><span class="diff-content">and the SRE on rota. A pairing session will be scheduled.</span></div>
+    <div class="diff-line del"><span class="diff-sign">-</span><span class="diff-content">Tenure requirement: you need 2 weeks of tenure first.</span></div>
+    <div class="diff-line del"><span class="diff-sign">-</span><span class="diff-content">Contact: Maya Singh (Head of Security) to confirm.</span></div>
+    <div class="diff-line ctx"><span class="diff-sign"> </span><span class="diff-content"></span></div>
+    <div class="diff-line add"><span class="diff-sign">+</span><span class="diff-content">⚠️ This changed — the old guidance said Slack + SRE pairing.</span></div>
+    <div class="diff-line add"><span class="diff-sign">+</span><span class="diff-content">The policy was updated 2026-05-15. New process:</span></div>
+    <div class="diff-line add"><span class="diff-sign">+</span><span class="diff-content">1. Complete Prod Access Foundations in the BTS Learning portal.</span></div>
+    <div class="diff-line add"><span class="diff-sign">+</span><span class="diff-content">2. Request via IAM platform (link in your completion email).</span></div>
+    <div class="diff-line add"><span class="diff-sign">+</span><span class="diff-content">3. Access granted in a 4-hour JIT window. No Slack ticket.</span></div>
+    <div class="diff-line add"><span class="diff-sign">+</span><span class="diff-content">Tenure: 3 working days (was 2 weeks). You're eligible now.</span></div>
+  </div>
+
+  <div class="quote-block" style="margin-top: 2rem;">
+    <p>The wiki didn't update itself. The agent did. Because it read the new policy, checked what it remembered from last time, and knew the difference.</p>
+    <cite>— the whole point</cite>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- PANEL 5: HOW TO RUN IT -->
+<section class="panel" id="p5">
+  <p class="panel-label">Run it yourself</p>
+  <h2 class="panel-title">Three commands.<br>Two sessions.<br>One diff.</h2>
+
+  <div class="code-block">
+    <div><span class="c-comment"># Install</span></div>
+    <div><span class="c-cmd">pip install</span> <span class="c-arg">-r requirements.txt</span></div>
+    <div>&nbsp;</div>
+    <div><span class="c-comment"># Provision the agent (once)</span></div>
+    <div><span class="c-cmd">python</span> <span class="c-arg">create_agent.py</span></div>
+    <div>&nbsp;</div>
+    <div><span class="c-comment"># Session 1 — baseline (old policy)</span></div>
+    <div><span class="c-cmd">python</span> <span class="c-arg">run_session_1.py</span></div>
+    <div>&nbsp;</div>
+    <div><span class="c-comment"># Session 2 — after policy update</span></div>
+    <div><span class="c-cmd">python</span> <span class="c-arg">run_session_2.py</span></div>
+    <div>&nbsp;</div>
+    <div><span class="c-comment"># 🎬 The demo moment</span></div>
+    <div><span class="c-cmd">diff</span> <span class="c-arg">outputs/session1.txt outputs/session2.txt</span></div>
+  </div>
+
+  <div class="stat-row" style="margin-top: 2rem;">
+    <div class="stat">
+      <span class="stat-num" style="color: var(--green);">0</span>
+      <span class="stat-label">Slack tickets required</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" style="color: var(--green);">∞</span>
+      <span class="stat-label">Sessions. Same memory.</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" style="color: var(--gold);">1</span>
+      <span class="stat-label">Agent. Gets smarter each time.</span>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<footer>
+  <div class="footer-brand">Institutional Memory</div>
+  <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+    <a href="https://github.com/ksn0ky/institutional-memory/pull/1" target="_blank">PR #1 → ksn0ky/institutional-memory</a>
+    <a href="https://github.com/aaalla-d/institutional-memory" target="_blank">aaalla-d/institutional-memory</a>
+  </div>
+</footer>
+
+<script>
+  // ── Intersection observer for panel fade-ins ──
+  const panels = document.querySelectorAll('.panel');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+  panels.forEach(p => io.observe(p));
+
+  // ── Stat counters ──
+  function animateCount(el, target, duration = 1200) {
+    const start = performance.now();
+    const update = (now) => {
+      const t = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(ease * target);
+      if (t < 1) requestAnimationFrame(update);
+    };
+    requestAnimationFrame(update);
+  }
+
+  const statIo = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const target = parseInt(e.target.dataset.target, 10);
+        if (!isNaN(target)) animateCount(e.target, target);
+        statIo.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-target]').forEach(el => statIo.observe(el));
+
+  // ── Stamp animation ──
+  const stampIo = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        setTimeout(() => {
+          document.getElementById('stamp').classList.add('animate');
+        }, 700);
+        stampIo.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  stampIo.observe(document.getElementById('stampContainer'));
+
+  // ── Terminal typewriter ──
+  const lines = [
+    { text: '$ python run_session_2.py', cls: 't-cmd', delay: 0 },
+    { text: '', delay: 200 },
+    { text: '  including: policy-update-2026-05-15.md', cls: 't-memory', delay: 300 },
+    { text: '  including: team-directory-update.md', cls: 't-memory', delay: 400 },
+    { text: '', delay: 500 },
+    { text: '--- Agent working ---', cls: 't-cmd', delay: 600 },
+    { text: '', delay: 700 },
+    { text: '  [📝 memory: read  /mnt/memory/access/prod-access.md]', cls: 't-memory', delay: 800 },
+    { text: '  [📝 memory: read  /mnt/memory/people/sre-team.md]', cls: 't-memory', delay: 1000 },
+    { text: '', delay: 1100 },
+    { text: '⚠️  CONTRADICTION DETECTED in /mnt/memory/access/prod-access.md', cls: 't-warn', delay: 1200 },
+    { text: '   Old: Slack + SRE pairing session required', cls: 't-warn', delay: 1400 },
+    { text: '   New: IAM portal, self-paced cert, JIT access', cls: 't-ok', delay: 1600 },
+    { text: '', delay: 1700 },
+    { text: '  [📝 memory: write /mnt/memory/access/prod-access.md]', cls: 't-memory', delay: 1800 },
+    { text: '     Updated: 2026-05-15 policy supersedes Jan 2026', cls: 't-update', delay: 2000 },
+    { text: '', delay: 2100 },
+    { text: '✓  Saved → outputs/session2.txt', cls: 't-ok', delay: 2300 },
+    { text: '   diff outputs/session1.txt outputs/session2.txt', cls: 't-cmd', delay: 2500 },
+  ];
+
+  const termBody = document.getElementById('terminalBody');
+  let termStarted = false;
+
+  const termIo = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting && !termStarted) {
+        termStarted = true;
+        termBody.innerHTML = '';
+        lines.forEach(({ text, cls, delay }) => {
+          setTimeout(() => {
+            const div = document.createElement('div');
+            div.className = cls || '';
+            div.textContent = text;
+            termBody.appendChild(div);
+            termBody.scrollTop = termBody.scrollHeight;
+          }, delay + 400);
+        });
+        termIo.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  termIo.observe(document.getElementById('p3'));
+</script>
